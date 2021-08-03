@@ -163,8 +163,12 @@ post "/lists/:list_id/todos/:id/destroy" do
 
   todo_id = params[:id].to_i
   @list[:todos].delete_at todo_id
-  session[:success] = "The todo has been deleted."
-  redirect "/lists/#{@list_id}"
+  if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
+    status 204
+  else  
+    session[:success] = "The todo has been deleted."
+    redirect "/lists/#{@list_id}"
+  end
 end
 
 # Update status of a todo
@@ -190,8 +194,6 @@ post "/lists/:id/complete_all" do
   session[:success] = "All todos have been completed."
   redirect "/lists/#{@list_id}"
 end
-
-
 
 
 
