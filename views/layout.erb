@@ -12,7 +12,7 @@
       <h1><a href="/">Todo Tracker</a></h1>
       <!-- shows the header links depending on which page is loaded -->
       <div class="actions">
-        <%= yield_content :header_links %>
+        <%== yield_content :header_links %>
       </div>
     </header>    
 
@@ -32,7 +32,7 @@
     <% end %> 
 
     <main>
-      <%= yield %>
+      <%== yield %>
     </main>
   </body>
 </html>
