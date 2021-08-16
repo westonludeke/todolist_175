@@ -1,13 +1,8 @@
-<!-- views/lists.erb -->
 <ul id="lists">
-  <% sort_lists(@lists) do |list| %>
+  <% sort_lists(@master_list) do |list, index| %>
     <li class="<%= list_class(list) %>">
-      <a href="/lists/<%= list[:id] %>">
-        <h2><%= list[:name] %></h2>
-        <p>
-          <%= todos_remaining_count(list) %> / <%= todos_count(list) %>
-        </p>
-      </a>
+      <h2><a href="/lists/<%= index %>"><%= list[:name] %></a></h2>
+      <p><%= number_of_incomplete_todos(list) %>/<%= size_of_todo_list(list) %></p>
     </li>
   <% end %>
 </ul>
