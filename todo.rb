@@ -19,8 +19,11 @@ helpers do
   # setup instance variables for session's master list and individual todo lists
   def setup_instance_variables(list_id=nil, todo_id=nil)
     @list_id = list_id.to_i unless nil
+    p "list_id: #{@list_id}"
     @todo_id = todo_id.to_i unless nil
+    p "todo_id: #{@todo_id}"
     @master_list = session[:lists]
+    p "master_list: #{@master_list}"
     @requested_list = session[:lists][@list_id] unless @list_id == nil
   end
 
@@ -82,9 +85,9 @@ helpers do
     max + 1
   end
 
-  def create_list_id
-    @list_id = session[:lists].size + 1
-  end
+  # def create_list_id
+  #   @list_id = session[:lists].size + 1
+  # end
 end
 
 get "/" do 
@@ -119,7 +122,11 @@ post "/lists" do
     erb :new_list, layout: :layout
   else
     # if valid, add new list and flash success
-    create_list_id
+    if @master_list == nil
+      @list_id = 0
+    else 
+      @list_id = @master_list.size 
+    end
     session[:lists] << { list_id: @list_id, name: list_name, todos: [] } 
     session[:success] = "The list has been created."
     redirect "/lists"
@@ -128,10 +135,9 @@ end
 
 # View a specific todo list
 get "/lists/:list_id" do
-  list_to_view = params['list_id'].to_i
-  setup_instance_variables(list_to_view)
+  setup_instance_variables(params['list_id'])
   
-  if @list_id <= (@master_list.length - 1) && @list_id >= 0
+  if @list_id <= @master_list.length && @list_id >= 0
     erb :single_todo_list, layout: :layout
   else 
     session[:error] = "The specified todo list was not found"
