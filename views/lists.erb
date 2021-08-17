@@ -1,11 +1,8 @@
 <ul id="lists">
-  Master List: <%= @master_list %>
-
   <% sort_lists(@master_list) do |list| %>
-    <br><br>List: <%= list %>
     <!-- Strikethrough if completed -->
     <li class="<%= list_class(list) %>">
-      
+
       <!-- Show lists -->
       <h2><a href="/lists/<%= list[:list_id] %>"><%= list[:name] %></a></h2>
       <p><% number_of_incomplete_todos(list) %>/<%= size_of_todo_list(list) %></p>
