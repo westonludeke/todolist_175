@@ -1,9 +1,10 @@
 =begin
 
-0. Fix numbers of incomplete todos, which aren't displaying
-1. Confirm site still works
-2. Remove master_list from showing
-3. Clean up site comments
+// Todo list //
+
+1. Clean up site comments
+2. Confirm site works fully
+3. Push to Heroku
 
 =end
 

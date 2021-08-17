@@ -1,5 +1,4 @@
 <ul id="lists">
-  <%= @master_list %>
   <% sort_lists(@master_list) do |list| %>
     <li class="<%= list_class(list) %>">
       <h2><a href="/lists/<%= list[:list_id] %>"><%= list[:name] %></a></h2>
