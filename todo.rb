@@ -1,5 +1,5 @@
 require "sinatra"
-require "sinatra/reloader"
+require "sinatra/reloader" if development?
 require "sinatra/content_for"
 require "tilt/erubis"
 
@@ -17,11 +17,11 @@ end
 
 helpers do 
   # setup instance variables for session's master list and individual todo lists
-  def setup_instance_variables(list_id=nil, todo_id=nil)
-    @list_id = list_id.to_i unless nil
+  def setup_instance_variables(requested_list_id=nil, todo_id=nil)
+    @requested_list_id = requested_list_id.to_i unless nil
     @todo_id = todo_id.to_i unless nil
     @master_list = session[:lists]
-    @requested_list = session[:lists][@list_id]
+    @requested_list = session[:lists][@requested_list_id] unless @requested_list_id == nil
   end
 
   # error handling if new list name is invalid
@@ -64,23 +64,26 @@ helpers do
   end
 
   def sort_lists(master_list, &block)
-    incomplete_lists = {}
-    complete_lists = {}
-
     complete_lists, incomplete_lists = master_list.partition { |list| list_completed?(list) }
 
-    incomplete_lists.each { |list| yield list, master_list.index(list) }
-    complete_lists.each { |list| yield list, master_list.index(list) }
+    incomplete_lists.each(&block)
+    complete_lists.each(&block)
   end
 
   def sort_todos(todos, &block)
-    incomplete_todos = {}
-    complete_todos = {}
-
     complete_todos, incomplete_todos = todos.partition { |todo| todo[:completed] }
 
-    incomplete_todos.each { |todo| yield todo, todos.index(todo) }
-    complete_todos.each { |todo| yield todo, todos.index(todo) }
+    incomplete_todos.each(&block)
+    complete_todos.each(&block)
+  end
+
+  def next_todo_id(todos)
+    max = todos.map { |todo| todo[:id] }.max || 0
+    max + 1
+  end
+
+  def create_list_id
+    @list_id = session[:lists].size + 1
   end
 end
 
@@ -116,35 +119,37 @@ post "/lists" do
     erb :new_list, layout: :layout
   else
     # if valid, add new list and flash success
-    session[:lists] << { name: list_name, todos: [] } 
+    create_list_id
+    session[:lists] << { list_id: @list_id, name: list_name, todos: [] } 
     session[:success] = "The list has been created."
     redirect "/lists"
   end
 end
 
 # View a specific todo list
-get "/lists/:list_id" do
-  setup_instance_variables(params['list_id'])
-
-  if @list_id <= (@master_list.length - 1) && @list_id >= 0
+get "/lists/:requested_list_id" do
+  list_to_view = params['requested_list_id'].to_i
+  setup_instance_variables(list_to_view)
+  
+  if @requested_list_id <= (@master_list.length - 1) && @requested_list_id >= 0
     erb :single_todo_list, layout: :layout
-  else
-    session[:error] = "Invalid list url. Please try again."
-    redirect "/lists"
+  else 
+    session[:error] = "The specified todo list was not found"
+    redirect "/lists"  
   end
 end
 
 # Edit an existing todo list
-get "/lists/:list_id/edit" do
-  setup_instance_variables(params['list_id'])
+get "/lists/:requested_list_id/edit" do
+  setup_instance_variables(params['requested_list_id'])
 
-  @list = session[:lists][@list_id]
+  @list = session[:lists][@requested_list_id]
   erb :edit_todo_list, layout: :layout
 end
 
 # Update existing todo list's name
-post "/lists/:list_id" do 
-  setup_instance_variables(params['list_id'])
+post "/lists/:requested_list_id" do 
+  setup_instance_variables(params['requested_list_id'])
   list_name = params[:list_name].strip
   
   # checks if list name is valid
@@ -157,62 +162,74 @@ post "/lists/:list_id" do
     @requested_list[:name] = list_name
     # if valid, update list name and flash success
     session[:success] = "The list name has been updated."
-    redirect "/lists/#{@list_id}"
+    redirect "/lists/#{@requested_list_id}"
   end
 end
 
 # Delete an individual todo list
 post "/lists/:list_id/delete" do 
-  setup_instance_variables(params['list_id'])
+  setup_instance_variables(params['requested_list_id'])
 
-  @master_list.delete_at(@list_id)
-  session[:success] = "The list has been deleted."
-  redirect "/lists"
+  @master_list.delete_at(@requested_list_id)
+
+  if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
+    "/lists"
+  else
+    session[:success] = "The list has been deleted."
+    redirect "/lists"
+  end
 end
 
 # Add a new item to a todo list
 post "/lists/:list_id/todos" do
   setup_instance_variables(params['list_id'])
-
   text = params[:todo].strip
 
   error = error_for_todo(text)
   if error 
     session[:error] = error 
     erb :single_todo_list, layout: :layout
-  else 
-    @requested_list[:todos] << {name: text, completed: false}
+  else
+    id = next_todo_id(@requested_list[:todos])
+    @requested_list[:todos] << { id: id, name: text, completed: false }
     session[:success] = "The todo has been successfully added."
     redirect "/lists/#{@list_id}"
   end
 end
 
 # Delete a single todo item
-post "/lists/:list_id/:todo_id/delete_todo" do 
-  setup_instance_variables(params['list_id'], params['todo_id'])
+post "/lists/:requested_list_id/:todo_id/delete_todo" do 
+  setup_instance_variables(params['requested_list_id'], params['todo_id'])
 
-  @requested_list[:todos].delete_at(@todo_id)
-  session[:success] = "The todo has been deleted."
-  redirect "/lists/#{@list_id}"
+  @requested_list[:todos].reject! { |todo| todo[:id] == @todo_id }
+
+  if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
+    status 204
+  else
+    session[:success] = "The todo has been deleted."
+    redirect "/lists/#{@requested_list_id}"
+  end
 end
 
 # Mark a single todo as complete/incomplete
-post "/lists/:list_id/:todo_id/toggle" do 
-  setup_instance_variables(params['list_id'], params['todo_id'])
+post "/lists/:requested_list_id/:todo_id/toggle" do 
+  setup_instance_variables(params['requested_list_id'], params['todo_id'])
 
   is_completed = params[:completed] == 'true'
-  @requested_list[:todos][@todo_id][:completed] = is_completed
+
+  todo = @requested_list[:todos].find { |todo| todo[:id] == @todo_id }
+  todo[:completed] = is_completed
 
   session[:success] = "The todo status has changed."
   redirect "/lists/#{@list_id}"
 end
 
 # Mark all todos as complete
-post "/lists/:list_id/toggle_all" do 
-  setup_instance_variables(params['list_id'])
+post "/lists/:requested_list_id/toggle_all" do 
+  setup_instance_variables(params['requested_list_id'])
 
   @requested_list[:todos].each { |todo| todo[:completed] = true }
 
   session[:success] = "All todos are now completed."
-  redirect "/lists/#{@list_id}"
+  redirect "/lists/#{@requested_list_id}"
 end
