@@ -1,3 +1,12 @@
+=begin
+
+0. Fix numbers of incomplete todos, which aren't displaying
+1. Confirm site still works
+2. Remove master_list from showing
+3. Clean up site comments
+
+=end
+
 require "sinatra"
 require "sinatra/reloader" if development?
 require "sinatra/content_for"
@@ -19,11 +28,8 @@ helpers do
   # setup instance variables for session's master list and individual todo lists
   def setup_instance_variables(list_id=nil, todo_id=nil)
     @list_id = list_id.to_i unless nil
-    p "list_id: #{@list_id}"
     @todo_id = todo_id.to_i unless nil
-    p "todo_id: #{@todo_id}"
     @master_list = session[:lists]
-    p "master_list: #{@master_list}"
     @requested_list = session[:lists][@list_id] unless @list_id == nil
   end
 
