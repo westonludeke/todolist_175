@@ -2,9 +2,11 @@
 
 // Todo list //
 
-1. Clean up site comments
-2. Confirm site works fully
-3. Push to Heroku
+0. Confirm site works fully
+1. Push to Heroku
+2. Maybe - Check on Rack version
+3. Maybe - Check on Rack-protection version
+4. Maybe - Fix jquery issues
 
 =end
 
@@ -36,10 +38,8 @@ helpers do
 
   # error handling if new list name is invalid
   def error_for_list_name(name)
-    # check if list name is unique
     if session[:lists].any? { |list| list[:name] == name }
       "The list name must be unique"
-    # check if the list's proposed name is of sufficient length
     elsif (1..100).cover?(name.size) == false
       "The list name must be between 1 and 100 characters"
     end
@@ -47,7 +47,6 @@ helpers do
 
   # error handling if new todo name is invalid
   def error_for_todo(name)
-    # check if the list's proposed name is of sufficient length
     if (1..100).cover?(name.size) == false
       "The todo's name must be between 1 and 100 characters"
     end
@@ -91,10 +90,6 @@ helpers do
     max = todos.map { |todo| todo[:id] }.max || 0
     max + 1
   end
-
-  # def create_list_id
-  #   @list_id = session[:lists].size + 1
-  # end
 end
 
 get "/" do 
@@ -121,14 +116,11 @@ end
 post "/lists" do
   list_name = params[:list_name].strip
 
-  # checks if list name is valid
   error = error_for_list_name(list_name)
   if error
-    # if invalid, show appropriate error message
     session[:error] = error
     erb :new_list, layout: :layout
   else
-    # if valid, add new list and flash success
     session[:lists] == nil ? @list_id = 0 : @list_id = session[:lists].size 
     session[:lists] << { list_id: @list_id, name: list_name, todos: [] } 
     session[:success] = "The list has been created."
@@ -161,15 +153,12 @@ post "/lists/:list_id" do
   setup_instance_variables(params['list_id'])
   list_name = params[:list_name].strip
   
-  # checks if list name is valid
   error = error_for_list_name(list_name)
   if error
-    # if invalid, show appropriate error message
     session[:error] = error
     erb :edit_todo_list, layout: :layout
   else
     @requested_list[:name] = list_name
-    # if valid, update list name and flash success
     session[:success] = "The list name has been updated."
     redirect "/lists/#{@list_id}"
   end
