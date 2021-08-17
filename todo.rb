@@ -122,11 +122,7 @@ post "/lists" do
     erb :new_list, layout: :layout
   else
     # if valid, add new list and flash success
-    if @master_list == nil
-      @list_id = 0
-    else 
-      @list_id = @master_list.size 
-    end
+    session[:lists] == nil ? @list_id = 0 : @list_id = session[:lists].size 
     session[:lists] << { list_id: @list_id, name: list_name, todos: [] } 
     session[:success] = "The list has been created."
     redirect "/lists"
