@@ -2,11 +2,10 @@
 
 // Todo list //
 
-0. Confirm site works fully
+0. List ids
 1. Push to Heroku
 2. Maybe - Check on Rack version
 3. Maybe - Check on Rack-protection version
-4. Maybe - Fix jquery issues
 
 =end
 
