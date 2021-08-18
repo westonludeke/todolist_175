@@ -3,9 +3,8 @@
 // Todo list //
 
 0. List ids
-1. Push to Heroku
-2. Maybe - Check on Rack version
-3. Maybe - Check on Rack-protection version
+1. Maybe - Check on Rack version
+2. Maybe - Check on Rack-protection version
 
 =end
 
