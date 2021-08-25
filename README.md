@@ -2,11 +2,13 @@
 
 ### Project Overview:
 
-Created a todo list app in Sinatra, Ruby, HTML, and CSS as part of Launch School's RB175 course. 
+A todo list app built in Sinatra, Ruby, HTML, and CSS as part of Launch School's RB175 course. Users can ceate multiple different todo lists, each containing individual todo items or tasks.
+
+Both an individual todo list as well as the todo items can be created, marked as completed, renamed, and deleted. There are also some validations built-in to prevent duplicate lists, duplicate todo items within the same lists, empty list/todo names, etc.
+
+All of the Ruby, Sinatra, HTML, and Javscript code is my own written during the course. Students are given instructions and implement the app on their own based on the parameters in the instructions. Most of the project's styling was provided by Launch School prior to development via CSS files and images.
 
 [The project is live on Heroku here](https://vast-gorge-88966.herokuapp.com). 
-
-Notes: The CSS files and images were developed by Launch School. All of the Ruby, Sinatra, HTML, and Javscript code is my own written as part of the course. Students are given instructions and implement the app on their own based on the parameters in the instructions.
 
 Bug: If a todo list is deleted and several other todo lists remain, it causes problems due to how the different lists are shown on the site. I need to go back and fix this in the future.
 
